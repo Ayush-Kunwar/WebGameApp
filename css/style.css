@@ -55,7 +55,7 @@ body{
 
 #game-board{
     display:grid;
-    grid-template-columns:repeat(6,80px);
+    grid-template-columns:repeat(auto-fit, minmax(80px, 80px));
     gap:10px;
     justify-content:center;
     margin-top:20px;

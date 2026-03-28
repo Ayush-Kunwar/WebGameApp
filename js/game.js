@@ -1,17 +1,18 @@
 let boardLocked = false;
-let emojis = ["😀","😎","👾","🐱","🍕","🚀"];
 
+let level = 1;
+let totalScore = 0;
+let levelScores = {};
+const levelText = document.getElementById("levelDisplay");
+let firstSelections = [];
 let cards = [];
-let firstCard = null;
-let secondCard = null;
 
 let attempts = 0;
-let matches = 0;
-
 let timer = 0;
 let timerInterval = null;
 
-let score = 0;
+let matchSize = 2;
+let cardGroups = 3;
 
 const startBtn = document.getElementById("startBtn");
 const board = document.getElementById("game-board");
@@ -22,145 +23,160 @@ const scoreText = document.getElementById("score");
 
 startBtn.addEventListener("click", startGame);
 
-function startGame(){
-
+function startGame() {
     startBtn.style.display = "none";
-
-    cards = [...emojis, ...emojis];
-
-    shuffle(cards);
-
-    createBoard();
-
-    startTimer();
-
+    startLevel();
 }
 
-function shuffle(array){
-
-    for(let i = array.length - 1; i > 0; i--){
-
-        let j = Math.floor(Math.random() * (i + 1));
-
-        let temp = array[i];
-        array[i] = array[j];
-        array[j] = temp;
-
+function startLevel() {
+    resetStats();
+    levelText.innerText = level;
+    if (level === 1) {
+        matchSize = 2;
+        cardGroups = 3;
+    } else if (level === 2) {
+        matchSize = 3;
+        cardGroups = 3;
+    } else {
+        matchSize = 4;
+        cardGroups = 3;
     }
 
+    generateCards();
+    createBoard();
+    startTimer();
 }
 
-function createBoard(){
+function generateCards() {
+    cards = [];
 
+    for (let i = 0; i < cardGroups; i++) {
+        let emoji = generateRandomEmoji();
+        for (let j = 0; j < matchSize; j++) {
+            cards.push(emoji);
+        }
+    }
+
+    shuffle(cards);
+}
+
+function generateRandomEmoji() {
+    const faces = ["😀", "😎", "🤖", "👾", "🐱", "🐸", "🐼", "👻"];
+    return faces[Math.floor(Math.random() * faces.length)];
+}
+
+function shuffle(array) {
+    for (let i = array.length - 1; i > 0; i--) {
+        let j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+    }
+}
+
+function createBoard() {
     board.innerHTML = "";
 
     cards.forEach(emoji => {
-
         let card = document.createElement("div");
-
         card.classList.add("card");
-
         card.dataset.emoji = emoji;
-
         card.innerHTML = "?";
-
         card.addEventListener("click", flipCard);
-
         board.appendChild(card);
-
     });
-
 }
 
-function flipCard(){
-
-    if(boardLocked) return;
-
-    if(this === firstCard) return;
+function flipCard() {
+    if (boardLocked) return;
+    if (firstSelections.includes(this)) return;
 
     this.innerHTML = this.dataset.emoji;
+    firstSelections.push(this);
 
-    if(!firstCard){
-
-        firstCard = this;
-
-    }
-    else{
-
-        secondCard = this;
-
+    if (firstSelections.length === matchSize) {
         attempts++;
         attemptsText.innerText = attempts;
-
         boardLocked = true;
-
         checkMatch();
-
     }
-
 }
 
-function checkMatch(){
+function checkMatch() {
+    let allMatch = firstSelections.every(
+        card => card.dataset.emoji === firstSelections[0].dataset.emoji
+    );
 
-    if(firstCard.dataset.emoji === secondCard.dataset.emoji){
-
-        matches++;
-
-        resetTurn();
-
+    if (allMatch) {
+        firstSelections = [];
         boardLocked = false;
 
-        if(matches === emojis.length){
-            endGame();
+        let matchedCards = document.querySelectorAll(
+            `.card:not([data-matched="true"])`
+        );
+
+        let unmatched = [...matchedCards].filter(
+            card => card.innerHTML === "?"
+        );
+
+        if (unmatched.length === 0) {
+            completeLevel();
         }
-
-    }
-    else{
-
+    } else {
         setTimeout(() => {
+            firstSelections.forEach(card => {
+                card.innerHTML = "?";
+            });
 
-            firstCard.innerHTML = "?";
-            secondCard.innerHTML = "?";
-
-            resetTurn();
-
+            firstSelections = [];
             boardLocked = false;
-
-        }, 600);
-
+        }, 700);
     }
-
 }
 
-function resetTurn(){
-
-    firstCard = null;
-    secondCard = null;
-
-}
-
-function startTimer(){
-
-    timerInterval = setInterval(() => {
-
-        timer++;
-
-        timerText.innerText = timer;
-
-    },1000);
-
-}
-
-function endGame(){
-
+function completeLevel() {
     clearInterval(timerInterval);
 
-    score = Math.floor(1000 / (attempts + timer));
+    let levelScore = Math.floor(1000 / (attempts + timer));
+    levelScores["Level " + level] = levelScore;
+    totalScore += levelScore;
 
-    scoreText.innerText = score;
+    scoreText.innerText = totalScore;
 
-    document.getElementById("finalScore").value = score;
+    let best = localStorage.getItem("bestLevel" + level);
 
+    if (!best || levelScore > best) {
+        localStorage.setItem("bestLevel" + level, levelScore);
+        document.getElementById("game-container").style.background = "#FFD700";
+    }
+
+    if (level < 3) {
+        level++;
+        setTimeout(startLevel, 1500);
+    } else {
+        endGame();
+    }
+}
+
+function startTimer() {
+    timerInterval = setInterval(() => {
+        timer++;
+        timerText.innerText = timer;
+    }, 1000);
+}
+
+function resetStats() {
+    attempts = 0;
+    timer = 0;
+    firstSelections = [];
+    attemptsText.innerText = "0";
+    timerText.innerText = "0";
+    clearInterval(timerInterval);
+}
+
+function endGame() {
+    document.getElementById("finalScore").value = totalScore;
     document.getElementById("game-controls").style.display = "block";
+}
 
+function restartGame() {
+    location.reload();
 }

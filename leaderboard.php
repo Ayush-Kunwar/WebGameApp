@@ -75,7 +75,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["score"])) {
 
                 <tr>
                     <th>Username</th>
-                    <th>Score</th>
+                    <th>Total Score</th>
                 </tr>
 
                 <?php
