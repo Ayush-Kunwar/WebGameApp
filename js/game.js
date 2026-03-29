@@ -29,6 +29,7 @@ function startGame() {
 }
 
 function startLevel() {
+    document.getElementById("game-container").style.background = "grey";
     resetStats();
     levelText.innerText = level;
     if (level === 1) {
@@ -50,20 +51,21 @@ function startLevel() {
 function generateCards() {
     cards = [];
 
-    for (let i = 0; i < cardGroups; i++) {
-        let emoji = generateRandomEmoji();
+    const faces = ["😀", "😎", "🤖", "👾", "🐱", "🐸", "🐼", "👻"];
+
+    // shuffle and pick unique emojis
+    let shuffled = [...faces].sort(() => 0.5 - Math.random());
+    let selected = shuffled.slice(0, cardGroups);
+
+    selected.forEach(emoji => {
         for (let j = 0; j < matchSize; j++) {
             cards.push(emoji);
         }
-    }
+    });
 
     shuffle(cards);
 }
 
-function generateRandomEmoji() {
-    const faces = ["😀", "😎", "🤖", "👾", "🐱", "🐸", "🐼", "👻"];
-    return faces[Math.floor(Math.random() * faces.length)];
-}
 
 function shuffle(array) {
     for (let i = array.length - 1; i > 0; i--) {
@@ -106,21 +108,24 @@ function checkMatch() {
     );
 
     if (allMatch) {
+
+        // ✅ mark cards as matched
+        firstSelections.forEach(card => {
+            card.dataset.matched = "true";
+        });
+
         firstSelections = [];
         boardLocked = false;
 
-        let matchedCards = document.querySelectorAll(
-            `.card:not([data-matched="true"])`
-        );
-
-        let unmatched = [...matchedCards].filter(
-            card => card.innerHTML === "?"
-        );
+        let unmatched = [...document.querySelectorAll(".card")]
+            .filter(card => !card.dataset.matched);
 
         if (unmatched.length === 0) {
             completeLevel();
         }
+
     } else {
+
         setTimeout(() => {
             firstSelections.forEach(card => {
                 card.innerHTML = "?";
@@ -128,6 +133,7 @@ function checkMatch() {
 
             firstSelections = [];
             boardLocked = false;
+
         }, 700);
     }
 }
@@ -143,7 +149,7 @@ function completeLevel() {
 
     let best = localStorage.getItem("bestLevel" + level);
 
-    if (!best || levelScore > best) {
+    if (!best || levelScore > parseInt(best)) { 
         localStorage.setItem("bestLevel" + level, levelScore);
         document.getElementById("game-container").style.background = "#FFD700";
     }

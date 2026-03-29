@@ -26,6 +26,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["score"])) {
 
     $data[] = $entry;
 
+    // sort descending
+    usort($data, function ($a, $b) {
+        return $b["score"] - $a["score"];
+    });
+
     file_put_contents($file, json_encode($data));
 
     // VERY IMPORTANT
