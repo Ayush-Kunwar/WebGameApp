@@ -1,3 +1,5 @@
+// global variables
+
 let boardLocked = false;
 
 let level = 1;
@@ -21,6 +23,7 @@ const attemptsText = document.getElementById("attempts");
 const timerText = document.getElementById("timer");
 const scoreText = document.getElementById("score");
 
+// start game
 startBtn.addEventListener("click", startGame);
 
 function startGame() {
@@ -28,6 +31,7 @@ function startGame() {
     startLevel();
 }
 
+// initialise level. As user progresses, more cards are shown with a bigger match size
 function startLevel() {
     document.getElementById("game-container").style.background = "grey";
     resetStats();
@@ -48,6 +52,7 @@ function startLevel() {
     startTimer();
 }
 
+// generate random cards using a math function. 
 function generateCards() {
     cards = [];
 
@@ -66,6 +71,7 @@ function generateCards() {
     shuffle(cards);
 }
 
+// shuffle function for shuffling emojis 
 
 function shuffle(array) {
     for (let i = array.length - 1; i > 0; i--) {
@@ -74,6 +80,7 @@ function shuffle(array) {
     }
 }
 
+// create the board 
 function createBoard() {
     board.innerHTML = "";
 
@@ -87,6 +94,7 @@ function createBoard() {
     });
 }
 
+// function to handle showing the emoji behind each card when flipped. Increments attempts value which is used to calculate score later.
 function flipCard() {
     if (boardLocked) return;
     if (firstSelections.includes(this)) return;
@@ -102,6 +110,7 @@ function flipCard() {
     }
 }
 
+// function to check if cards are matching
 function checkMatch() {
     let allMatch = firstSelections.every(
         card => card.dataset.emoji === firstSelections[0].dataset.emoji
@@ -125,7 +134,7 @@ function checkMatch() {
         }
 
     } else {
-
+// if not matching, flip the cards back so emojis are hidden again
         setTimeout(() => {
             firstSelections.forEach(card => {
                 card.innerHTML = "?";
@@ -140,7 +149,7 @@ function checkMatch() {
 
 function completeLevel() {
     clearInterval(timerInterval);
-
+// calculate the score once all cards are matched
     let levelScore = Math.floor(1000 / (attempts + timer));
     levelScores["Level " + level] = levelScore;
     totalScore += levelScore;
@@ -161,7 +170,7 @@ function completeLevel() {
         endGame();
     }
 }
-
+// timer function that records time taken to complete levels
 function startTimer() {
     timerInterval = setInterval(() => {
         timer++;
